@@ -1,5 +1,8 @@
 pragma solidity ^0.8.5;
 
+import "./util/RandomUtil.sol";
+import "./payments/GamePaymentsService.sol";
+
 contract RockPaperScissors {
 
     enum PlayerChoice {
@@ -41,17 +44,25 @@ contract RockPaperScissors {
     GameSession[] private sessions;
     mapping(uint256 => GameSession) private gameIdToGameSession;
     mapping(uint256 => bool) private gameIdToExists;
+    mapping(string => bool) private gameInviteLinkToExists;
 
     modifier gameSessionIsActive(uint256 sessionId) {
+        _ensureGameSessionIsActive(sessionId);
         _;
     }
 
     modifier senderIsMemberOfGame(uint256 sessionId) {
+        _ensureSenderIsMemberOfGame(sessionId);
         _;
     }
 
     modifier gameSessionExists(uint256 sessionId) {
-        require(gameIdToExists[sessionId] == true, "Target game session doesn't exists");
+        _ensureGameSessionExists(sessionId);
+        _;
+    }
+
+    modifier gameSessionExists(string inviteLink) {
+        _ensureGameSessionExists(inviteLink);
         _;
     }
 
@@ -72,14 +83,22 @@ contract RockPaperScissors {
 
     function createNewSession(
         uint256 bidValue
-    ) external {
+    ) external returns (string inviteLink) {
+        return "";
+    }
 
+    function getGameSessionInfo(
+        uint256 sessionId
+    ) external gameSessionExists(sessionId) returns (GameSession memory) {
+        GameSession memory targetSession = gameIdToGameSession[sessionId];
+        targetSession.inviteLink = "";
+        return targetSession;
     }
 
     function commit(
-        uint256 sessionId
-    ) external senderIsMemberOfGame(sessionId) gameSessionIsActive(sessionId) {
-
+        string memory inviteLink
+    ) external  gameSessionExists(inviteLink) returns (uint256 sessionId) {
+        return 123;
     }
 
     function reveal(
@@ -93,5 +112,41 @@ contract RockPaperScissors {
         uint256 sessionId
     ) external senderIsMemberOfGame(sessionId) gameSessionIsActive(sessionId) {
 
+    }
+
+    function getCommissionPercent() external view returns (uint256) {
+        return commissionPercent;
+    }
+
+    function getMinBidValue() external view returns (uint256) {
+        return minBidValue;
+    }
+
+    function _ensureGameSessionExists(uint256 sessionId) private view {
+        require(gameIdToExists[sessionId], "Target game session doesn't exists");
+    }
+
+    function _ensureGameSessionExists(string inviteLink) private view {
+        require(gameInviteLinkToExists[inviteLink], "Game session with target invite link doesn't exists");
+    }
+
+    function _ensureSenderIsMemberOfGame(uint256 sessionId) private view {
+        _ensureGameSessionExists(sessionId);
+        GameSession storage gameSession = gameIdToGameSession[sessionId];
+        uint playersCount = gameSession.players.length;
+        for (int i = 0; i < playersCount; i++) {
+            if (gameSession.players[i] == msg.sender) {
+                return;
+            }
+        }
+        revert Error("Sender is not member of game");
+    }
+
+    function _ensureGameSessionIsActive(uint256 sessionId) private view {
+        _ensureGameSessionExists(sessionId);
+        GameSession storage gameSession = gameIdToGameSession[sessionId];
+        if (gameSession.sessionStatus == GameSessionStatus.Distributed) {
+            revert Error("Target game session is not active");
+        }
     }
 }
