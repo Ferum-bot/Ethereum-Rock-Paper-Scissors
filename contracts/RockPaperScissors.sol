@@ -31,14 +31,6 @@ contract RockPaperScissors {
     event PlayerRevealed(uint256 sessionId, address player, PlayerChoice choice);
     event GameDistributed(uint256 sessionId, address winner, uint256 profit);
 
-    modifier gameSessionIsActive(uint256 sessionId) {
-        _;
-    }
-
-    modifier senderIsMemberOfGame(uint256 sessionId) {
-        _;
-    }
-
     address payable private commissionHandler;
     address payable private depositHandler;
     address private admin;
@@ -49,6 +41,19 @@ contract RockPaperScissors {
     GameSession[] private sessions;
     mapping(uint256 => GameSession) private gameIdToGameSession;
     mapping(uint256 => bool) private gameIdToExists;
+
+    modifier gameSessionIsActive(uint256 sessionId) {
+        _;
+    }
+
+    modifier senderIsMemberOfGame(uint256 sessionId) {
+        _;
+    }
+
+    modifier gameSessionExists(uint256 sessionId) {
+        require(gameIdToExists[sessionId] == true, "Target game session doesn't exists");
+        _;
+    }
 
     constructor(
         address _commissionHandler,
