@@ -18,10 +18,11 @@ library GamePaymentsService {
 
     }
 
-    function takeCommission(
-        address payable takeFrom,
+    function payAndTakeCommission(
+        address payable winner,
+        uint256 bid,
+        address payable depositHandler,
         address payable commissionHandler,
-        uint256 trasferValue,
         uint256 commissionPercent
     ) public pure {
 
