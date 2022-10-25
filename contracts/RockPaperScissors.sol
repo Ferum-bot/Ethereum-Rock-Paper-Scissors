@@ -25,31 +25,6 @@ contract RockPaperScissors {
     mapping(uint256 => bool) private gameIdToExists;
     mapping(string => bool) private gameInviteLinkToExists;
 
-    modifier gameSessionIsActive(uint256 sessionId) {
-        _ensureGameSessionIsActive(sessionId);
-        _;
-    }
-
-    modifier gameSessionIsActive(string inviteLink) {
-        _ensureGameSessionIsActive(inviteLink);
-        _;
-    }
-
-    modifier senderIsMemberOfGame(uint256 sessionId) {
-        _ensureSenderIsMemberOfGame(sessionId);
-        _;
-    }
-
-    modifier gameSessionExists(uint256 sessionId) {
-        _ensureGameSessionExists(sessionId);
-        _;
-    }
-
-    modifier gameSessionExists(string inviteLink) {
-        _ensureGameSessionExists(inviteLink);
-        _;
-    }
-
     constructor(
         address _commissionHandler,
         address _depositHandler,
@@ -67,7 +42,7 @@ contract RockPaperScissors {
 
     function getGameSessionInfo(
         uint256 sessionId
-    ) external gameSessionExists(sessionId) returns (GameTypes.GameSession memory) {
+    ) external gameIsDistributed(sessionId) returns (GameTypes.GameSession memory) {
         GameTypes.GameSession memory targetSession = gameIdToGameSession[sessionId];
         if (targetSession.sessionStatus != GameSessionStatus.Distributed) {
             revert Error("Game session is not distributed.");
@@ -182,6 +157,36 @@ contract RockPaperScissors {
 
     function getMinBidValue() external view returns (uint256) {
         return minBidValue;
+    }
+
+    modifier gameIsDistributed(uint256 sessionId) {
+        _ensureGameSessionExists(sessionId);
+        GameTypes.GameSession storage session = gameIdToGameSession[sessionId];
+        if (session.sessionStatus != GameTypes.GameSessionStatus.Distributed) {
+            _revertDueNotValidGameSessionStatus();
+        }
+        _;
+    }
+
+    modifier commitAllowed(string inviteLink) {
+        _ensureGameSessionExists(inviteLink);
+        _ensureGameSessionIsActive(inviteLink);
+    }
+
+
+    modifier senderIsMemberOfGame(uint256 sessionId) {
+        _ensureSenderIsMemberOfGame(sessionId);
+        _;
+    }
+
+    modifier gameSessionExists(uint256 sessionId) {
+        _ensureGameSessionExists(sessionId);
+        _;
+    }
+
+    modifier gameSessionExists(string inviteLink) {
+        _ensureGameSessionExists(inviteLink);
+        _;
     }
 
     function _ensureGameSessionExists(uint256 sessionId) private view {
