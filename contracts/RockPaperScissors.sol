@@ -135,17 +135,34 @@ contract RockPaperScissors {
 
         _ensureDistributeAllowed(targetSession);
 
+        address storage firstPlayer = targetSession.reveals[0].playerAddress;
+        address storage secondPlayer = targetSession.reveals[1].playerAddress;
+
         (address winner, address looser) = GameLogicService.getGameWinner(
-            targetSession.reveals[0].playerAddress, targetSession.reveals[0].choice,
-            targetSession.reveals[1].playerAddress, targetSession.reveals[1].choice
+            firstPlayer, targetSession.reveals[0].choice,
+            secondPlayer, targetSession.reveals[1].choice
         );
 
-        GamePaymentsService.payAndTakeCommission(
-            winner, targetSession.bidValue,
-            depositHandler, commissionHandler,
-            commissionPercent
-        );
+        if (winner == looser) {
+            GamePaymentsService.returnDeposit(
+                firstPlayer,
+                depositHandler,
+                targetSession.bidValue
+            );
+            GamePaymentsService.returnDeposit(
+                secondPlayer,
+                depositHandler,
+                targetSession.bidValue
+            );
+        } else {
+            GamePaymentsService.payAndTakeCommission(
+                winner, targetSession.bidValue,
+                depositHandler, commissionHandler,
+                commissionPercent
+            );
+        }
 
+        targetSession.sessionStatus = GameTypes.GameSessionStatus.Distributed;
         emit GameDistributed(targetSession.id, winner);
 
         return (winner, looser);
