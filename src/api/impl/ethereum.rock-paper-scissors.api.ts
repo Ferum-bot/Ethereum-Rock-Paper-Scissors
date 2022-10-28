@@ -6,7 +6,9 @@ import {
     GetGameSessionInfoParams,
     RevealParams
 } from "../models/params";
+import {injectable} from "inversify";
 
+@injectable()
 export class EthereumRockPaperScissorsApi implements RockPaperScissorsApi {
 
     commit(params: CommitParams): Promise<any> {

@@ -11,3 +11,8 @@ export enum GameSessionStatus {
     TWO_REVEAL = "TwoReveal",
     DISTRIBUTED = "Distributed"
 }
+
+export enum EthereumWeiFormat {
+    WEI,
+    ETHER
+}
