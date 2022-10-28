@@ -5,6 +5,7 @@ import "../util/GameTypes.sol";
 library GameLogicService {
 
     string constant private INVALID_PLAYER_CHOICE = "Invalid player choice.";
+    address constant private DRAW = address(0);
 
     function getGameWinner(
         address firstPlayer,
@@ -15,7 +16,7 @@ library GameLogicService {
 
         if (firstChoice == GameTypes.PlayerChoice.Rock) {
             if (secondChoice == GameTypes.PlayerChoice.Rock) {
-                return (0, 0);
+                return (DRAW, DRAW);
             }
             if (secondChoice == GameTypes.PlayerChoice.Paper) {
                 return (secondPlayer, firstPlayer);
@@ -32,7 +33,7 @@ library GameLogicService {
                 return (firstPlayer, secondPlayer);
             }
             if (secondChoice == GameTypes.PlayerChoice.Paper) {
-                return (0, 0);
+                return (DRAW, DRAW);
             }
             if (secondChoice == GameTypes.PlayerChoice.Scissors) {
                 return (secondPlayer, firstPlayer);
@@ -49,7 +50,7 @@ library GameLogicService {
                 return (firstPlayer, secondPlayer);
             }
             if (secondChoice == GameTypes.PlayerChoice.Scissors) {
-                return (0, 0);
+                return (DRAW, DRAW);
             }
 
             revert(INVALID_PLAYER_CHOICE);

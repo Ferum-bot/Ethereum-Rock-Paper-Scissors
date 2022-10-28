@@ -29,6 +29,7 @@ library GameTypes {
 
         GameSessionStatus sessionStatus;
 
-        PlayerReveal[] reveals;
+        mapping(uint256 => PlayerReveal) reveals;
+        uint256 revealsLength;
     }
 }

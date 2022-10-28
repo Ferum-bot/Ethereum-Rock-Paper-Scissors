@@ -7,11 +7,11 @@ library RandomUtil {
     function getRandomString(
         uint256 blockHash
     ) public pure returns (string memory) {
-        uint256 rand = uint(keccak256(blockHash));
+        uint256 rand = uint(keccak256(abi.encodePacked(blockHash)));
         return Strings.toString(rand);
     }
 
     function getUniqueIdentifier(uint256 randomValue) public pure returns (uint256) {
-        return uint256(keccak256(randomValue));
+        return uint256(keccak256(abi.encodePacked(randomValue)));
     }
 }

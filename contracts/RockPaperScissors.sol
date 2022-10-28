@@ -33,47 +33,42 @@ contract RockPaperScissors {
     ) {
         admin = msg.sender;
 
-        commissionHandler = _commissionHandler;
-        depositHandler = _depositHandler;
+        commissionHandler = payable(_commissionHandler);
+        depositHandler = payable(_depositHandler);
 
         commissionPercent = _commissionPercent;
         minBidValue = _minBidValue;
     }
 
-    function getGameSessionInfo(
-        uint256 sessionId
-    ) external gameIsDistributed(sessionId) returns (GameTypes.GameSession memory) {
-        GameTypes.GameSession memory targetSession = gameIdToGameSession[sessionId];
-        if (targetSession.sessionStatus != GameSessionStatus.Distributed) {
-            revert Error("Game session is not distributed.");
-        }
-        return targetSession;
-    }
-
     function createNewSession(
         uint256 bidValue,
         uint256 randomValue
-    ) external returns (string memory inviteLink) {
+    ) external createSessionAllowed(bidValue) returns (string memory) {
         GameTypes.GameSession memory gameSession;
 
-        uint256 blockHash = block.blockhash(block.number - 1);
+        uint256 blockHash = uint256(blockhash(block.number - 1));
         string memory inviteLink = RandomUtil.getRandomString(blockHash);
         uint256 sessionId = RandomUtil.getUniqueIdentifier(randomValue);
 
         if (gameInviteLinkToExists[inviteLink]) {
-            revert Error("Failed to create invitation link. Please try again.");
+            revert("Failed to create invitation link. Please try again.");
         }
         if (gameIdToExists[sessionId]) {
-            revert Error("Failed to create game session. Please try with another random value.");
+            revert("Failed to create game session. Please try with another random value.");
         }
 
         gameSession.id = sessionId;
         gameSession.inviteLink = inviteLink;
         gameSession.bidValue = bidValue;
-        gameSession.players.push(msg.sender);
-        gameSession.sessionStatus = GameSessionStatus.OneCommit;
+        gameSession.players = new address[](2);
+        gameSession.players[0] = msg.sender;
+        gameSession.sessionStatus = GameTypes.GameSessionStatus.OneCommit;
 
-        GamePaymentsService.reserveDeposit(msg.sender, depositHandler, bidValue);
+        GamePaymentsService.reserveDeposit(
+            payable(msg.sender),
+            payable(depositHandler),
+            bidValue
+        );
 
         sessions.push(gameSession);
 
@@ -90,15 +85,17 @@ contract RockPaperScissors {
 
     function commit(
         string memory inviteLink
-    ) external gameSessionExists(inviteLink) gameSessionIsActive(inviteLink) returns (uint256 sessionId) {
+    ) external commitAllowed(inviteLink) returns (uint256) {
         GameTypes.GameSession storage targetSession = gameInviteLinkToSession[inviteLink];
 
-        _ensureCommitAllowed(targetSession);
-
-        GamePaymentsService.reserveDeposit(msg.sender, depositHandler, targetSession.bidValue);
+        GamePaymentsService.reserveDeposit(
+            payable(msg.sender),
+            payable(depositHandler),
+            targetSession.bidValue
+        );
 
         targetSession.players.push(msg.sender);
-        targetSession.sessionStatus = GameSessionStatus.TwoCommit;
+        targetSession.sessionStatus = GameTypes.GameSessionStatus.TwoCommit;
 
         emit PlayerCommitted(targetSession.id, msg.sender);
 
@@ -108,22 +105,21 @@ contract RockPaperScissors {
     function reveal(
         uint256 sessionId,
         GameTypes.PlayerChoice choice
-    ) external senderIsMemberOfGame(sessionId) gameSessionIsActive(sessionId) {
+    ) external revealAllowed(sessionId) {
         GameTypes.GameSession storage targetSession = gameIdToGameSession[sessionId];
-
-        _ensureRevealAllowed(targetSession);
 
         GameTypes.PlayerReveal memory reveal;
         reveal.playerAddress = msg.sender;
         reveal.choice = choice;
 
-        targetSession.reveals.push(reveal);
+        targetSession.reveals[targetSession.revealsLength] = reveal;
+        targetSession.revealsLength++;
 
-        if (targetSession.sessionStatus == GameSessionStatus.OneReveal) {
-            targetSession.sessionStatus = GameSessionStatus.TwoReveal;
+        if (targetSession.sessionStatus == GameTypes.GameSessionStatus.TwoCommit) {
+            targetSession.sessionStatus = GameTypes.GameSessionStatus.OneReveal;
         }
-        if (targetSession.sessionStatus == GameSessionStatus.TwoCommit) {
-            targetSession.sessionStatus = GameSessionStatus.OneReveal;
+        if (targetSession.sessionStatus == GameTypes.GameSessionStatus.OneReveal) {
+            targetSession.sessionStatus = GameTypes.GameSessionStatus.TwoReveal;
         }
 
         emit PlayerRevealed(targetSession.id, msg.sender);
@@ -131,13 +127,11 @@ contract RockPaperScissors {
 
     function distribute(
         uint256 sessionId
-    ) external senderIsMemberOfGame(sessionId) gameSessionIsActive(sessionId) returns (address winner, address looser) {
+    ) external distributeAllowed(sessionId) returns (address, address) {
         GameTypes.GameSession storage targetSession = gameIdToGameSession[sessionId];
 
-        _ensureDistributeAllowed(targetSession);
-
-        address storage firstPlayer = targetSession.reveals[0].playerAddress;
-        address storage secondPlayer = targetSession.reveals[1].playerAddress;
+        address firstPlayer = targetSession.reveals[0].playerAddress;
+        address secondPlayer = targetSession.reveals[1].playerAddress;
 
         (address winner, address looser) = GameLogicService.getGameWinner(
             firstPlayer, targetSession.reveals[0].choice,
@@ -146,19 +140,19 @@ contract RockPaperScissors {
 
         if (winner == looser) {
             GamePaymentsService.returnDeposit(
-                firstPlayer,
-                depositHandler,
+                payable(firstPlayer),
+                payable(depositHandler),
                 targetSession.bidValue
             );
             GamePaymentsService.returnDeposit(
-                secondPlayer,
-                depositHandler,
+                payable(secondPlayer),
+                payable(depositHandler),
                 targetSession.bidValue
             );
         } else {
             GamePaymentsService.payAndTakeCommission(
-                winner, targetSession.bidValue,
-                depositHandler, commissionHandler,
+                payable(winner), targetSession.bidValue,
+                payable(depositHandler), payable(commissionHandler),
                 commissionPercent
             );
         }
@@ -177,10 +171,6 @@ contract RockPaperScissors {
         return minBidValue;
     }
 
-    fallback() external payable {
-
-    }
-
     modifier gameIsDistributed(uint256 sessionId) {
         _ensureGameSessionExists(sessionId);
         GameTypes.GameSession storage session = gameIdToGameSession[sessionId];
@@ -190,24 +180,34 @@ contract RockPaperScissors {
         _;
     }
 
-    modifier commitAllowed(string inviteLink) {
+    modifier createSessionAllowed(uint256 bidValue) {
+        require(bidValue >= minBidValue, "Bid value is too small.");
+        _;
+    }
+
+    modifier commitAllowed(string memory inviteLink) {
         _ensureGameSessionExists(inviteLink);
         _ensureGameSessionIsActive(inviteLink);
-    }
-
-
-    modifier senderIsMemberOfGame(uint256 sessionId) {
-        _ensureSenderIsMemberOfGame(sessionId);
+        GameTypes.GameSession storage targetSession = gameInviteLinkToSession[inviteLink];
+        _ensureCommitAllowed(targetSession);
         _;
     }
 
-    modifier gameSessionExists(uint256 sessionId) {
+    modifier revealAllowed(uint256 sessionId) {
         _ensureGameSessionExists(sessionId);
+        _ensureGameSessionIsActive(sessionId);
+        _ensureSenderIsMemberOfGame(sessionId);
+        GameTypes.GameSession storage targetSession = gameIdToGameSession[sessionId];
+        _ensureRevealAllowed(targetSession);
         _;
     }
 
-    modifier gameSessionExists(string inviteLink) {
-        _ensureGameSessionExists(inviteLink);
+    modifier distributeAllowed(uint256 sessionId) {
+        _ensureGameSessionExists(sessionId);
+        _ensureGameSessionIsActive(sessionId);
+        _ensureSenderIsMemberOfGame(sessionId);
+        GameTypes.GameSession storage targetSession = gameIdToGameSession[sessionId];
+        _ensureDistributeAllowed(targetSession);
         _;
     }
 
@@ -223,62 +223,62 @@ contract RockPaperScissors {
         _ensureGameSessionExists(sessionId);
         GameTypes.GameSession storage gameSession = gameIdToGameSession[sessionId];
         uint playersCount = gameSession.players.length;
-        for (int i = 0; i < playersCount; i++) {
+        for (uint256 i = 0; i < playersCount; i++) {
             if (gameSession.players[i] == msg.sender) {
                 return;
             }
         }
-        revert Error("Sender is not member of game");
+        revert("Sender is not member of game");
     }
 
     function _ensureGameSessionIsActive(uint256 sessionId) private view {
         _ensureGameSessionExists(sessionId);
         GameTypes.GameSession storage gameSession = gameIdToGameSession[sessionId];
-        if (gameSession.sessionStatus == GameSessionStatus.Distributed) {
-            revert Error("Target game session is not active");
+        if (gameSession.sessionStatus == GameTypes.GameSessionStatus.Distributed) {
+            revert("Target game session is not active");
         }
     }
 
     function _ensureGameSessionIsActive(string memory inviteLink) private view {
         _ensureGameSessionExists(inviteLink);
         GameTypes.GameSession storage gameSession = gameInviteLinkToSession[inviteLink];
-        if (gameSession.sessionStatus ==  GameSessionStatus.Distributed) {
-            revert Error("Target game session is not active");
+        if (gameSession.sessionStatus == GameTypes.GameSessionStatus.Distributed) {
+            revert("Target game session is not active");
         }
     }
 
     function _revertDueNotValidGameSessionStatus() private pure {
-        revert Error("Action not applied to game session status.");
+        revert("Action not applied to game session status.");
     }
 
     function _ensureCommitAllowed(GameTypes.GameSession storage targetSession) private view {
-        if (targetSession.sessionStatus != GameSessionStatus.OneCommit) {
+        if (targetSession.sessionStatus != GameTypes.GameSessionStatus.OneCommit) {
             _revertDueNotValidGameSessionStatus();
         }
         if (targetSession.players.length != 1) {
             _revertDueNotValidGameSessionStatus();
         }
         if (targetSession.players[0] == msg.sender) {
-            revert Error("You are already member of game session.");
+            revert("You are already member of game session.");
         }
     }
 
     function _ensureRevealAllowed(GameTypes.GameSession storage targetSession) private view {
-        bool validSessionStatus = targetSession.sessionStatus == GameSessionStatus.TwoCommit || targetSession.sessionStatus == GameSessionStatus.OneReveal;
+        bool validSessionStatus = targetSession.sessionStatus == GameTypes.GameSessionStatus.TwoCommit || targetSession.sessionStatus == GameTypes.GameSessionStatus.OneReveal;
 
         if (!validSessionStatus) {
             _revertDueNotValidGameSessionStatus();
         }
 
-        for (uint256 i = 0; i < targetSession.reveals.length; i++) {
+        for (uint256 i = 0; i < targetSession.revealsLength; i++) {
             if (targetSession.reveals[i].playerAddress == msg.sender) {
-                revert Error("You are already revealed in this game session.");
+                revert("You are already revealed in this game session.");
             }
         }
     }
 
     function _ensureDistributeAllowed(GameTypes.GameSession storage targetSession) private view {
-        if (targetSession.sessionStatus != GameSessionStatus.TwoReveal) {
+        if (targetSession.sessionStatus != GameTypes.GameSessionStatus.TwoReveal) {
             _revertDueNotValidGameSessionStatus();
         }
     }
