@@ -7,7 +7,7 @@ library GamePaymentsService {
         address payable depositHandler,
         uint256 depositValue
     ) public pure {
-
+        
     }
 
     function returnDeposit(

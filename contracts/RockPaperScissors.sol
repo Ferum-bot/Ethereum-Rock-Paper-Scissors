@@ -56,7 +56,8 @@ contract RockPaperScissors {
     ) external returns (string memory inviteLink) {
         GameTypes.GameSession memory gameSession;
 
-        string memory inviteLink = RandomUtil.getRandomString();
+        uint256 blockHash = block.blockhash(block.number - 1);
+        string memory inviteLink = RandomUtil.getRandomString(blockHash);
         uint256 sessionId = RandomUtil.getUniqueIdentifier(randomValue);
 
         if (gameInviteLinkToExists[inviteLink]) {
@@ -174,6 +175,10 @@ contract RockPaperScissors {
 
     function getMinBidValue() external view returns (uint256) {
         return minBidValue;
+    }
+
+    fallback() external payable {
+
     }
 
     modifier gameIsDistributed(uint256 sessionId) {
