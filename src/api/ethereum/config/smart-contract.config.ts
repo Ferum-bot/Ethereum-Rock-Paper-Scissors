@@ -13,7 +13,7 @@ function alchemyProvider() {
 }
 const { PRIVATE_KEY, CONTRACT_ADDRESS, MODE } = process.env
 let provider: Provider = alchemyProvider()
-if (MODE == 'localhost') {
+if (MODE == 'dev') {
     provider = localHostProvider()
 }
 
