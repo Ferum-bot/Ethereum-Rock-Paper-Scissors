@@ -1,4 +1,5 @@
 import {Container} from "inversify";
+import "reflect-metadata";
 import {RockPaperScissorsApi} from "../api/rock-paper-scissors.api";
 import {TYPES} from "./types";
 import {EthereumRockPaperScissorsApi} from "../api/ethereum/ethereum.rock-paper-scissors.api";
@@ -15,10 +16,10 @@ container
     .bind<RockPaperScissorsEventApi>(TYPES.RockPaperScissorsEventApi)
     .to(EthereumRockPaperScissorsEventApi);
 container
-    .bind<RockPaperScissorsService>(TYPES.RockPaperScissorsService)
+    .bind<RockPaperScissorsService>(RockPaperScissorsService)
     .toSelf()
 container
-    .bind<GameSmartContract>(TYPES.GameSmartContract)
+    .bind<GameSmartContract>(GameSmartContract)
     .toSelf()
 
 export { container }

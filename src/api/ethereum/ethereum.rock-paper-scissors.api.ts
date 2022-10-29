@@ -7,12 +7,12 @@ import {
 } from "../models/params";
 import {inject, injectable} from "inversify";
 import {GameSmartContract} from "./types";
-import {TYPES} from "../../di/types";
+import {BigNumber} from "ethers";
 
 @injectable()
 export class EthereumRockPaperScissorsApi implements RockPaperScissorsApi {
 
-    @inject(TYPES.GameSmartContract)
+    @inject(GameSmartContract)
     private gameSmartContractWrapper: GameSmartContract | undefined
 
     public async commit(params: CommitParams): Promise<any> {
@@ -27,11 +27,11 @@ export class EthereumRockPaperScissorsApi implements RockPaperScissorsApi {
         return await this.contract["distribute"](params.sessionId);
     }
 
-    public async getCommissionPercent(): Promise<any> {
-        return await this.contract["getCommissionPercent"]();
+    public async getCommissionPercent(): Promise<BigNumber> {
+        return await this.contract["getCommissionPercent"]()
     }
 
-    public async getMinBidValue(): Promise<any> {
+    public async getMinBidValue(): Promise<BigNumber> {
         return await this.contract["getMinBidValue"]();
     }
 

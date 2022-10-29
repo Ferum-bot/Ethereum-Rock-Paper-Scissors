@@ -4,6 +4,7 @@ import {
     DistributeParams,
     RevealParams
 } from "./models/params";
+import {BigNumber} from "ethers";
 
 export interface RockPaperScissorsApi {
 
@@ -15,7 +16,7 @@ export interface RockPaperScissorsApi {
 
     distribute(params: DistributeParams): Promise<any>
 
-    getCommissionPercent(): Promise<any>
+    getCommissionPercent(): Promise<BigNumber>
 
-    getMinBidValue(): Promise<any>
+    getMinBidValue(): Promise<BigNumber>
 }

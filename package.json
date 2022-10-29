@@ -4,7 +4,9 @@
   "description": "Popular game rock-paper-scissors powered by Solidity and Blockchain",
   "main": "index.js",
   "scripts": {
-    "launch": "npx hardhat run src/index.ts",
+    "setup-ethereum-node": "npx hardhat node",
+    "interact": "npx hardhat run src/interact/interact.ts",
+    "local-interact": "npx hardhat run --network localhost src/interact/interact.ts",
     "deploy": "npx hardhat run src/deploy/contract-deploy.ts",
     "local-deploy": "npx hardhat run --network localhost src/deploy/contract-deploy.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -30,6 +32,7 @@
   },
   "dependencies": {
     "@abraham/reflection": "^0.11.0",
+    "@ethersproject/abstract-provider": "^5.7.0",
     "@nomiclabs/hardhat-ethers": "^2.1.1",
     "@openzeppelin/contracts": "^4.7.3",
     "@types/node": "^18.11.3",
