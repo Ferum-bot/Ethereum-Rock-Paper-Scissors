@@ -2,21 +2,28 @@ import {inject, injectable} from "inversify";
 import {RockPaperScissorsApi} from "../api/rock-paper-scissors.api";
 import {TYPES} from "../di/types";
 import {EthereumWeiFormat} from "./models/enums";
+import {utils} from "ethers";
 
 @injectable()
 export class RockPaperScissorsService {
 
     @inject(TYPES.RockPaperScissorsApi)
-    private api: RockPaperScissorsApi
+    private api: RockPaperScissorsApi | undefined
 
-    @inject(TYPES.RockPaperScissorsEventApi)
-    private eventApi: RockPaperScissorsEventApi
-
-    public getCommissionPercent(): number {
-        return 23
+    public async getCommissionPercent(): Promise<number> {
+        return await this.api?.getCommissionPercent()!
     }
 
-    public getMinBidValue(format: EthereumWeiFormat): number {
-        return format
+    public async getMinBidValue(format: EthereumWeiFormat): Promise<string> {
+        const weiMinBidValue = await this.api?.getMinBidValue()!
+
+        switch (format) {
+            case EthereumWeiFormat.ETHER:
+                return utils.formatEther(weiMinBidValue);
+            case EthereumWeiFormat.WEI:
+                return weiMinBidValue;
+        }
+
+        return weiMinBidValue
     }
 }

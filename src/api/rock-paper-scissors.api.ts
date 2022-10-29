@@ -2,13 +2,10 @@ import {
     CommitParams,
     CreateNewSessionParams,
     DistributeParams,
-    GetGameSessionInfoParams,
     RevealParams
 } from "./models/params";
 
 export interface RockPaperScissorsApi {
-
-    getGameSessionInfo(params: GetGameSessionInfoParams): Promise<any>
 
     createNewSession(params: CreateNewSessionParams): Promise<any>
 
