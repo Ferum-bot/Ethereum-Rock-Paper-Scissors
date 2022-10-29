@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: 0BSD
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/utils/Strings.sol";

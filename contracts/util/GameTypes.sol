@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: 0BSD
 pragma solidity ^0.8.5;
 
 library GameTypes {
 
     enum PlayerChoice {
+        None,
         Rock,
         Paper,
         Scissors
@@ -16,20 +18,16 @@ library GameTypes {
         Distributed
     }
 
-    struct PlayerReveal {
-        address playerAddress;
-        PlayerChoice choice;
-    }
-
     struct GameSession {
         uint256 id;
         string inviteLink;
-        address[] players;
+        address firstPlayer;
+        address secondPlayer;
         uint256 bidValue;
 
         GameSessionStatus sessionStatus;
 
-        mapping(uint256 => PlayerReveal) reveals;
-        uint256 revealsLength;
+        PlayerChoice firstPlayerReveal;
+        PlayerChoice secondPlayerReveal;
     }
 }

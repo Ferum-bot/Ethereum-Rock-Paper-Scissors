@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: 0BSD
 pragma solidity ^0.8.5;
 
 library GamePaymentsService {
@@ -7,7 +8,7 @@ library GamePaymentsService {
         address payable depositHandler,
         uint256 depositValue
     ) public pure {
-        
+
     }
 
     function returnDeposit(

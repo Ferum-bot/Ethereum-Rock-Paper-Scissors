@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: 0BSD
 pragma solidity ^0.8.5;
 
 import "./util/RandomUtil.sol";
@@ -60,8 +61,9 @@ contract RockPaperScissors {
         gameSession.id = sessionId;
         gameSession.inviteLink = inviteLink;
         gameSession.bidValue = bidValue;
-        gameSession.players = new address[](2);
-        gameSession.players[0] = msg.sender;
+        gameSession.firstPlayer = msg.sender;
+        gameSession.firstPlayerReveal = GameTypes.PlayerChoice.None;
+        gameSession.secondPlayerReveal = GameTypes.PlayerChoice.None;
         gameSession.sessionStatus = GameTypes.GameSessionStatus.OneCommit;
 
         GamePaymentsService.reserveDeposit(
@@ -94,7 +96,7 @@ contract RockPaperScissors {
             targetSession.bidValue
         );
 
-        targetSession.players.push(msg.sender);
+        targetSession.secondPlayer = msg.sender;
         targetSession.sessionStatus = GameTypes.GameSessionStatus.TwoCommit;
 
         emit PlayerCommitted(targetSession.id, msg.sender);
@@ -105,21 +107,19 @@ contract RockPaperScissors {
     function reveal(
         uint256 sessionId,
         GameTypes.PlayerChoice choice
-    ) external revealAllowed(sessionId) {
+    ) external revealAllowed(sessionId, choice) {
         GameTypes.GameSession storage targetSession = gameIdToGameSession[sessionId];
-
-        GameTypes.PlayerReveal memory reveal;
-        reveal.playerAddress = msg.sender;
-        reveal.choice = choice;
-
-        targetSession.reveals[targetSession.revealsLength] = reveal;
-        targetSession.revealsLength++;
 
         if (targetSession.sessionStatus == GameTypes.GameSessionStatus.TwoCommit) {
             targetSession.sessionStatus = GameTypes.GameSessionStatus.OneReveal;
         }
         if (targetSession.sessionStatus == GameTypes.GameSessionStatus.OneReveal) {
             targetSession.sessionStatus = GameTypes.GameSessionStatus.TwoReveal;
+        }
+        if (targetSession.firstPlayer == msg.sender) {
+            targetSession.firstPlayerReveal = choice;
+        } else {
+            targetSession.secondPlayerReveal = choice;
         }
 
         emit PlayerRevealed(targetSession.id, msg.sender);
@@ -130,12 +130,12 @@ contract RockPaperScissors {
     ) external distributeAllowed(sessionId) returns (address, address) {
         GameTypes.GameSession storage targetSession = gameIdToGameSession[sessionId];
 
-        address firstPlayer = targetSession.reveals[0].playerAddress;
-        address secondPlayer = targetSession.reveals[1].playerAddress;
+        address firstPlayer = targetSession.firstPlayer;
+        address secondPlayer = targetSession.secondPlayer;
 
         (address winner, address looser) = GameLogicService.getGameWinner(
-            firstPlayer, targetSession.reveals[0].choice,
-            secondPlayer, targetSession.reveals[1].choice
+            firstPlayer, targetSession.firstPlayerReveal,
+            secondPlayer, targetSession.secondPlayerReveal
         );
 
         if (winner == looser) {
@@ -193,7 +193,8 @@ contract RockPaperScissors {
         _;
     }
 
-    modifier revealAllowed(uint256 sessionId) {
+    modifier revealAllowed(uint256 sessionId, GameTypes.PlayerChoice choice) {
+        _ensurePlayerChoiceValid(choice);
         _ensureGameSessionExists(sessionId);
         _ensureGameSessionIsActive(sessionId);
         _ensureSenderIsMemberOfGame(sessionId);
@@ -222,11 +223,11 @@ contract RockPaperScissors {
     function _ensureSenderIsMemberOfGame(uint256 sessionId) private view {
         _ensureGameSessionExists(sessionId);
         GameTypes.GameSession storage gameSession = gameIdToGameSession[sessionId];
-        uint playersCount = gameSession.players.length;
-        for (uint256 i = 0; i < playersCount; i++) {
-            if (gameSession.players[i] == msg.sender) {
-                return;
-            }
+        if (gameSession.firstPlayer == msg.sender) {
+            return;
+        }
+        if (gameSession.secondPlayer == msg.sender) {
+            return;
         }
         revert("Sender is not member of game");
     }
@@ -255,12 +256,22 @@ contract RockPaperScissors {
         if (targetSession.sessionStatus != GameTypes.GameSessionStatus.OneCommit) {
             _revertDueNotValidGameSessionStatus();
         }
-        if (targetSession.players.length != 1) {
-            _revertDueNotValidGameSessionStatus();
-        }
-        if (targetSession.players[0] == msg.sender) {
+        if (targetSession.firstPlayer == msg.sender) {
             revert("You are already member of game session.");
         }
+    }
+
+    function _ensurePlayerChoiceValid(GameTypes.PlayerChoice choice) private pure {
+        if (choice == GameTypes.PlayerChoice.Rock) {
+            return;
+        }
+        if (choice == GameTypes.PlayerChoice.Paper) {
+            return;
+        }
+        if (choice == GameTypes.PlayerChoice.Scissors) {
+            return;
+        }
+        revert("Invalid player choice");
     }
 
     function _ensureRevealAllowed(GameTypes.GameSession storage targetSession) private view {
@@ -270,10 +281,11 @@ contract RockPaperScissors {
             _revertDueNotValidGameSessionStatus();
         }
 
-        for (uint256 i = 0; i < targetSession.revealsLength; i++) {
-            if (targetSession.reveals[i].playerAddress == msg.sender) {
-                revert("You are already revealed in this game session.");
-            }
+        if (targetSession.firstPlayer == msg.sender && targetSession.firstPlayerReveal != GameTypes.PlayerChoice.None) {
+            revert("You are already revealed in this game session.");
+        }
+        if (targetSession.secondPlayer == msg.sender && targetSession.secondPlayerReveal != GameTypes.PlayerChoice.None) {
+            revert("You are already revealed in this game session.");
         }
     }
 
