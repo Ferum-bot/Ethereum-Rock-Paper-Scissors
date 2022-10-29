@@ -8,9 +8,8 @@ module.exports = {
     defaultNetwork: NETWORK,
     networks: {
         hardhat: {},
-        goerli: {
-            url: API_URL,
-            accounts: [ `0x${PRIVATE_KEY}` ],
+        localhost: {
+            accounts: [ `${PRIVATE_KEY}` ],
         },
     },
 };
