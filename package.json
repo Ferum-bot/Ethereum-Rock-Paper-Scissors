@@ -4,6 +4,8 @@
   "description": "Popular game rock-paper-scissors powered by Solidity and Blockchain",
   "main": "index.js",
   "scripts": {
+    "launch": "npx hardhat run src/index.ts",
+    "deploy": "npx hardhat run src/deploy/deploy.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
