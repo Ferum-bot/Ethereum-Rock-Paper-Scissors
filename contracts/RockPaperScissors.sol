@@ -13,8 +13,8 @@ contract RockPaperScissors {
     event PlayerRevealed(uint256 sessionId, address player);
     event GameDistributed(uint256 sessionId, address winner);
 
-    address payable private commissionHandler;
-    address payable private depositHandler;
+    address private commissionHandler;
+    address private depositHandler;
     address private admin;
 
     uint256 private commissionPercent;
@@ -34,8 +34,8 @@ contract RockPaperScissors {
     ) {
         admin = msg.sender;
 
-        commissionHandler = payable(_commissionHandler);
-        depositHandler = payable(_depositHandler);
+        commissionHandler = _commissionHandler;
+        depositHandler = _depositHandler;
 
         commissionPercent = _commissionPercent;
         minBidValue = _minBidValue;
@@ -91,8 +91,8 @@ contract RockPaperScissors {
         GameTypes.GameSession storage targetSession = gameInviteLinkToSession[inviteLink];
 
         GamePaymentsService.reserveDeposit(
-            payable(msg.sender),
-            payable(depositHandler),
+            msg.sender,
+            depositHandler,
             targetSession.bidValue
         );
 
@@ -140,19 +140,19 @@ contract RockPaperScissors {
 
         if (winner == looser) {
             GamePaymentsService.returnDeposit(
-                payable(firstPlayer),
-                payable(depositHandler),
+                firstPlayer,
+                depositHandler,
                 targetSession.bidValue
             );
             GamePaymentsService.returnDeposit(
-                payable(secondPlayer),
-                payable(depositHandler),
+                secondPlayer,
+                depositHandler,
                 targetSession.bidValue
             );
         } else {
             GamePaymentsService.payAndTakeCommission(
-                payable(winner), targetSession.bidValue,
-                payable(depositHandler), payable(commissionHandler),
+                winner, targetSession.bidValue,
+                depositHandler, commissionHandler,
                 commissionPercent
             );
         }
