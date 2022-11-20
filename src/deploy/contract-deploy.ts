@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config()
 
+const RPS_TOKEN = "RPS"
 const RANDOM_UTIL = "RandomUtil"
 const GAME_LOGIC_SERVICE = "GameLogicService"
 const GAME_PAYMENT_SERVICE = "GamePaymentsService"
@@ -11,10 +12,15 @@ const ROCK_PAPER_SCISSORS = "RockPaperScissors"
 
 const {
     COMMISSION_HANDLER_ADDRESS, DEPOSIT_HANDLER_ADDRESS,
-    COMMISSION_PERCENT, MIN_BID_VALUE
+    COMMISSION_PERCENT, MIN_BID_VALUE, DONATION, TIME_LOCK_DURATION
 } = process.env
 
 async function contractDeploy() {
+    const tokenDeployResult = await genericDeploy({
+        contractName: RPS_TOKEN,
+        constructorParams: Array.of(TIME_LOCK_DURATION, DONATION),
+        additional: Array.of()
+    })
     const randomUtilDeployResult = await genericDeploy({
         contractName: RANDOM_UTIL,
         constructorParams: Array.of(),

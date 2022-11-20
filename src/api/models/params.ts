@@ -18,3 +18,8 @@ export type RevealParams = {
 export type DistributeParams = {
     sessionId: BigNumber
 }
+
+export type BaseEventParams = {
+    blockNumberFrom: number
+    blockNumberTo: number
+}
