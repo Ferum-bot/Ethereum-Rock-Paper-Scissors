@@ -5,6 +5,13 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract RPS is ERC20 {
 
+    event DonationChanged(uint256 newDonation);
+    event TimeLockDurationChanged(uint256 newDuration);
+    event OnRPSGamePaymentsServiceChanged(address newAddress);
+
+    event FreeCoinsTaken(address receiver, uint256 amount);
+    event CoinsTransferred(address from, address to, uint256 amount);
+
     address private owner;
 
     address private rpsGamePaymentsService;
@@ -25,16 +32,22 @@ contract RPS is ERC20 {
         _mint(owner, 10000 * 10 ** decimals());
     }
 
-    function transferCoins(address from, address to, uint256 amount) external onlyRPSGamePaymentsService {
+    function transferCoins(address from, address to, uint256 amount) public onlyRPSGamePaymentsService {
         _transfer(from, to, amount);
+
+        emit CoinsTransferred(from, to, amount);
     }
 
     function takeFreeCoins() external lockDurationPassed {
         _transfer(owner, msg.sender, donation);
+
+        emit FreeCoinsTaken(msg.sender);
     }
 
     function setTimeLockDuration(uint256 _timeLockDuration) external onlyOwner {
         timeLockDuration = _timeLockDuration;
+
+        emit TimeLockDurationChanged(_timeLockDuration);
     }
 
     function getTimeLockDuration() view external returns (uint256) {
@@ -43,6 +56,8 @@ contract RPS is ERC20 {
 
     function setDonation(uint256 _donation) external onlyOwner {
         donation = _donation;
+
+        emit DonationChanged(_donation);
     }
 
     function getDonation() external view returns (uint256) {
@@ -55,6 +70,8 @@ contract RPS is ERC20 {
 
     function setRPSGamePaymentsServiceAddress(address _rpsGamePaymentsService) external onlyOwner {
         rpsGamePaymentsService = _rpsGamePaymentsService;
+
+        emit OnRPSGamePaymentsServiceChanged(_rpsGamePaymentsService);
     }
 
     modifier onlyOwner() {

@@ -5,6 +5,9 @@ import "../tokens/RPS-Token.sol";
 
 contract GamePaymentsService {
 
+    event OnTokenAddressChanged(address newAddress);
+    event OnRockPaperScissorsChanged(address newAddress);
+
     address private owner;
 
     address private rockPaperScissors;
@@ -52,6 +55,8 @@ contract GamePaymentsService {
 
     function setRockPaperScissorsAddress(address _rockPaperScissors) external onlyOwner {
         rockPaperScissors = _rockPaperScissors;
+
+        emit OnRockPaperScissorsChanged(_rockPaperScissors);
     }
 
     function getRPSTokenAddress() external view returns (address) {
@@ -61,6 +66,8 @@ contract GamePaymentsService {
     function setRPSTokenAddress(address _tokenAddress) external onlyOwner {
         tokenAddress = _tokenAddress;
         token = RPS(tokenAddress);
+
+        emit OnTokenAddressChanged(_tokenAddress);
     }
 
     modifier onlyRockPaperScissors() {
