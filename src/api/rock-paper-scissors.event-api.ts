@@ -1,4 +1,4 @@
-import {BaseEventParams} from "./models/params";
+import {BaseEventParams} from "./models/rock-paper-scissors.params";
 
 export interface RockPaperScissorsEventApi {
 

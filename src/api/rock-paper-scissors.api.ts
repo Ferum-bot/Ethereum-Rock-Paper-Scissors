@@ -3,7 +3,7 @@ import {
     CreateNewSessionParams,
     DistributeParams,
     RevealParams
-} from "./models/params";
+} from "./models/rock-paper-scissors.params";
 import {BigNumber} from "ethers";
 
 export interface RockPaperScissorsApi {

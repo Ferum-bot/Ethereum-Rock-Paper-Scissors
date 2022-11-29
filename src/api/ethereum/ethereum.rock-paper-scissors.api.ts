@@ -4,16 +4,16 @@ import {
     CreateNewSessionParams,
     DistributeParams,
     RevealParams
-} from "../models/params";
+} from "../models/rock-paper-scissors.params";
 import {inject, injectable} from "inversify";
-import {GameSmartContract} from "./types";
+import {RockPaperScissorsContract} from "./types";
 import {BigNumber} from "ethers";
 
 @injectable()
 export class EthereumRockPaperScissorsApi implements RockPaperScissorsApi {
 
-    @inject(GameSmartContract)
-    private gameSmartContractWrapper: GameSmartContract | undefined
+    @inject(RockPaperScissorsContract)
+    private gameSmartContractWrapper: RockPaperScissorsContract | undefined
 
     public async commit(params: CommitParams): Promise<any> {
         return await this.contract["commit"](params.inviteLink);

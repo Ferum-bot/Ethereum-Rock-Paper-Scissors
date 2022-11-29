@@ -1,6 +1,6 @@
 import {injectable} from "inversify";
 import { RockPaperScissorsEventApi } from "../rock-paper-scissors.event-api";
-import {BaseEventParams} from "../models/params";
+import {BaseEventParams} from "../models/rock-paper-scissors.params";
 
 @injectable()
 export class EthereumRockPaperScissorsEventApi implements RockPaperScissorsEventApi {
