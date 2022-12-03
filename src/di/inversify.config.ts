@@ -13,6 +13,10 @@ import {
     randomUtilContract,
     rockPaperScissorsContract, rpsTokenContract
 } from "../api/ethereum/config/smart-contracts.config";
+import {GameLogicServiceApi} from "../api/game-logic-service.api";
+import {EthereumGameLogicServiceApi} from "../api/ethereum/ethereum.game-logic-service.api";
+import {RPSTokenApi} from "../api/rps-token.api";
+import {EthereumRPSTokenApi} from "../api/ethereum/ethereum.rps-token.api";
 
 const container = new Container()
 
@@ -41,6 +45,12 @@ container
 container
     .bind<RockPaperScissorsEventApi>(TYPES.RockPaperScissorsEventApi)
     .to(EthereumRockPaperScissorsEventApi);
+container
+    .bind<GameLogicServiceApi>(TYPES.GameLogicServiceApi)
+    .to(EthereumGameLogicServiceApi);
+container
+    .bind<RPSTokenApi>(TYPES.RPSTokenApi)
+    .to(EthereumRPSTokenApi);
 
 container
     .bind<RockPaperScissorsService>(RockPaperScissorsService)

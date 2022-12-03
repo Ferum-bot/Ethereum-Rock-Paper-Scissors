@@ -51,6 +51,7 @@ async function contractDeploy() {
     })
 
     console.info(`Game contract address: ${contractDeployResult.address}`)
+    console.info(`RPS token address: ${tokenDeployResult.address}`)
 }
 
 contractDeploy()

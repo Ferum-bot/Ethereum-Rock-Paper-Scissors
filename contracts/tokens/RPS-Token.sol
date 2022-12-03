@@ -40,8 +40,9 @@ contract RPS is ERC20 {
 
     function takeFreeCoins() external lockDurationPassed {
         _transfer(owner, msg.sender, donation);
+        lastTimeTokensTaken[msg.sender] = block.timestamp;
 
-        emit FreeCoinsTaken(msg.sender);
+        emit FreeCoinsTaken(msg.sender, donation);
     }
 
     function setTimeLockDuration(uint256 _timeLockDuration) external onlyOwner {
@@ -85,7 +86,11 @@ contract RPS is ERC20 {
     }
 
     modifier lockDurationPassed() {
-        uint256 timePassed = now() - timeLockDuration[msg.sender];
+        if (lastTimeTokensTaken[msg.sender] == 0) {
+            _;
+        }
+
+        uint256 timePassed = block.timestamp - lastTimeTokensTaken[msg.sender];
         require(timePassed >= timeLockDuration, "Time lock duration not passed");
         _;
     }

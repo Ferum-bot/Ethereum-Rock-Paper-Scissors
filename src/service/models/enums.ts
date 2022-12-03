@@ -1,4 +1,5 @@
 export enum PlayerChoice {
+    NONE = "None",
     ROCK = "Rock",
     PAPER = "Paper",
     SCISSORS = "Scissors",

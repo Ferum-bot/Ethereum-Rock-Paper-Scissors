@@ -12,3 +12,5 @@ export interface GameWinner {
     readonly winnerAddress: string
     readonly looserAddress: string
 }
+
+export const DRAW = '0x0'

@@ -6,7 +6,7 @@ import gameTypesContractJSON from "../../../../artifacts/contracts/util/GameType
 // @ts-ignore
 import randomUtilContractJSON from "../../../../artifacts/contracts/util/RandomUtil.sol/RandomUtil.json";
 // @ts-ignore
-import rpsTokenContractJSON from "../../../../contracts/tokens";
+import rpsTokenContractJSON from "../../../../artifacts/contracts/tokens/RPS-Token.sol/RPS.json";
 // @ts-ignore
 import gameLogicServiceContractJSON from "../../../../artifacts/contracts/service/GameLogicService.sol/GameLogicService.json";
 // @ts-ignore

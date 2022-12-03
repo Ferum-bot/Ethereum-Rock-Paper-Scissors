@@ -13,9 +13,12 @@ contract RockPaperScissors {
     event PlayerRevealed(uint256 sessionId, address player);
     event GameDistributed(uint256 sessionId, address winner);
 
+    address private gamePaymentsServiceAddress;
+    GamePaymentsService private gamePaymentsService;
+
     address private commissionHandler;
     address private depositHandler;
-    address private admin;
+    address private owner;
 
     uint256 private commissionPercent;
     uint256 private minBidValue;
@@ -32,7 +35,7 @@ contract RockPaperScissors {
         uint256 _commissionPercent,
         uint256 _minBidValue
     ) {
-        admin = msg.sender;
+        owner = msg.sender;
 
         commissionHandler = _commissionHandler;
         depositHandler = _depositHandler;
@@ -66,7 +69,7 @@ contract RockPaperScissors {
         gameSession.secondPlayerReveal = GameTypes.PlayerChoice.None;
         gameSession.sessionStatus = GameTypes.GameSessionStatus.OneCommit;
 
-        GamePaymentsService.reserveDeposit(
+        gamePaymentsService.reserveDeposit(
             payable(msg.sender),
             payable(depositHandler),
             bidValue
@@ -90,7 +93,7 @@ contract RockPaperScissors {
     ) external commitAllowed(inviteLink) returns (uint256) {
         GameTypes.GameSession storage targetSession = gameInviteLinkToSession[inviteLink];
 
-        GamePaymentsService.reserveDeposit(
+        gamePaymentsService.reserveDeposit(
             msg.sender,
             depositHandler,
             targetSession.bidValue
@@ -139,18 +142,18 @@ contract RockPaperScissors {
         );
 
         if (winner == looser) {
-            GamePaymentsService.returnDeposit(
+            gamePaymentsService.returnDeposit(
                 firstPlayer,
                 depositHandler,
                 targetSession.bidValue
             );
-            GamePaymentsService.returnDeposit(
+            gamePaymentsService.returnDeposit(
                 secondPlayer,
                 depositHandler,
                 targetSession.bidValue
             );
         } else {
-            GamePaymentsService.payAndTakeCommission(
+            gamePaymentsService.payAndTakeCommission(
                 winner, targetSession.bidValue,
                 depositHandler, commissionHandler,
                 commissionPercent
@@ -169,6 +172,15 @@ contract RockPaperScissors {
 
     function getMinBidValue() external view returns (uint256) {
         return minBidValue;
+    }
+
+    function getGamePaymentsServiceAddress() external view returns (address) {
+        return gamePaymentsServiceAddress;
+    }
+
+    function setGamePaymentsServiceAddress(address newAddress) external onlyOwner {
+        gamePaymentsServiceAddress = newAddress;
+        gamePaymentsService = GamePaymentsService(gamePaymentsServiceAddress);
     }
 
     modifier gameIsDistributed(uint256 sessionId) {
@@ -209,6 +221,11 @@ contract RockPaperScissors {
         _ensureSenderIsMemberOfGame(sessionId);
         GameTypes.GameSession storage targetSession = gameIdToGameSession[sessionId];
         _ensureDistributeAllowed(targetSession);
+        _;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can use this functionality");
         _;
     }
 

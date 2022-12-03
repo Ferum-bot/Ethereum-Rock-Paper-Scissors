@@ -1,6 +1,8 @@
 const TYPES = {
     RockPaperScissorsApi: Symbol.for("RockPaperScissorsApi"),
     RockPaperScissorsEventApi: Symbol.for("RockPaperScissorsEventApi"),
+    GameLogicServiceApi: Symbol.for("GameLogicServiceApi"),
+    RPSTokenApi: Symbol.for("RPSTokenApi"),
 
     RockPaperScissorsContract: Symbol.for("RockPaperScissorsContract"),
     GameTypesContract: Symbol.for("GameTypesContract"),

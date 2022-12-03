@@ -10,6 +10,9 @@ export class EthereumRPSTokenApi implements RPSTokenApi {
     private contract: ethers.Contract | undefined
 
     public async getDonationValue(): Promise<BigNumber> {
+        if (this.contract) {
+            return Promise.resolve(BigNumber.from(23))
+        }
         return Promise.resolve(BigNumber.from(2));
     }
 

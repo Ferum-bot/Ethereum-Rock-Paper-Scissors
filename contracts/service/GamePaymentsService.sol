@@ -23,7 +23,7 @@ contract GamePaymentsService {
         address reserveFrom,
         address depositHandler,
         uint256 depositValue
-    ) public pure onlyRockPaperScissors {
+    ) public payable onlyRockPaperScissors {
         token.transferCoins(reserveFrom, depositHandler, depositValue);
     }
 
@@ -31,7 +31,7 @@ contract GamePaymentsService {
         address returnTo,
         address depositHandler,
         uint256 depositValue
-    ) public pure onlyRockPaperScissors {
+    ) public payable onlyRockPaperScissors {
         token.transferCoins(depositHandler, returnTo, depositValue);
     }
 
@@ -41,7 +41,7 @@ contract GamePaymentsService {
         address depositHandler,
         address commissionHandler,
         uint256 commissionPercent
-    ) public pure onlyRockPaperScissors {
+    ) public payable onlyRockPaperScissors {
         uint256 commissionAmount = (2 * bid) * commissionPercent / 100;
         uint256 winnerPayment = 2 * bid - commissionAmount;
 
@@ -71,7 +71,7 @@ contract GamePaymentsService {
     }
 
     modifier onlyRockPaperScissors() {
-        require(msg.sender == rpsTokenAddress, "Only Rock-Paper-Scissors smart contract can use this functionality");
+        require(msg.sender == rockPaperScissors, "Only Rock-Paper-Scissors smart contract can use this functionality");
         _;
     }
 
