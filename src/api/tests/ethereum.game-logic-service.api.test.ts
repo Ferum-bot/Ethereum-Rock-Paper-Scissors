@@ -1,10 +1,9 @@
 import {container as diContainer} from "../../di/inversify.config";
 import {TYPES} from "../../di/types";
 import {GameLogicServiceApi} from "../game-logic-service.api";
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from '@jest/globals';
+import {beforeAll, beforeEach, describe, expect, test} from '@jest/globals';
 import {EthereumGameLogicServiceApi} from "../ethereum/ethereum.game-logic-service.api";
 import {
-    dropLocalEthereumNode,
     getWalletAddress,
     prepareSmartContractEnvironmentForTests
 } from "./helpres/smart-contracts.helpers";
@@ -15,10 +14,6 @@ describe('ethereum-game-logic-service', () => {
 
     beforeAll(async () => {
         await prepareSmartContractEnvironmentForTests()
-    })
-
-    afterAll(async () => {
-        await dropLocalEthereumNode()
     })
 
     beforeEach(async () => {
